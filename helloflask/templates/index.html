@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+
+
+<head>
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <link rel="shortcut icon" href = "{{url_for('static',filename='fav.ico')}}">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>  
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />  
+</head>
+
+<style type="text/css">
+    .table.table-striped {
+        width: 75%;
+        margin: 0 auto;
+        border-width: 1px;
+        background-color: rgba(150, 150, 150, 0.26);
+        border-color: #000000;
+    }
+</style>
+<style type="text/css">
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        border-width: 1px;
+        background-color: black;
+        overflow: auto;
+        color:white;
+        font-family: Garamond;
+    }
+</style>
+<body>
+
+    
+    <center>
+        <h1>Smart Fish</h1>
+    <br>
+    <div class="addMargin">
+    <h4><a href="/watchStream"><button type="button" id="bt0" class="btn btn-outline-secondary">Watch Fish</button></a> 
+         <button type="button" id="bt1" class="btn btn-outline-secondary">Feed</button> 
+          <button type="button" id="bt2" class="btn btn-outline-secondary">Light On</button> 
+          <button type="button" id="bt3" class="btn btn-outline-secondary">Light Off</button> 
+          <button type="button" id="bt4" class="btn btn-outline-secondary">Ambient</button> 
+          <button type="button" id="maybe" class="btn btn-outline-secondary">Ambient Off</button>           
+          <button type="button" id="bt6" class="btn btn-outline-secondary">Brighten</button>
+	  <button type="button" id="bt5" class="btn btn-outline-secondary">Dim</button> 
+	  <button type="button" id="bt7" class="btn btn-outline-secondary">Light Pattern</button>
+           
+  </h4>
+    </div>
+    </center>    
+<br>
+    <div id="Tapas">
+    
+    </div>
+    <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+    
+
+</body>
+
+</html>
+<script>
+$(document).ready(function() {
+    setInterval(function() {
+    $.ajax({
+      type: "POST",
+      url: "/postTemp"
+    })
+     
+}, 5000);
+});
+</script>
+ <script src="{{ url_for('static', filename='highcharts-theme.js') }}"></script>
+
+<script>
+    $("#bt1").click(function () {
+        $.ajax({
+            url: "/feed", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    
+    $("#bt2").click(function () {
+        $.ajax({
+            url: "/lightOn", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    
+    $("#bt3").click(function () {
+        $.ajax({
+            url: "/lightOff", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    
+    $("#bt4").click(function () {
+        $.ajax({
+            url: "/ambient", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    $("#maybe").click(function () {
+        $.ajax({
+            url: "/ambientOff", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    $("#bt5").click(function () {
+        $.ajax({
+            url: "/dim", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    $("#bt6").click(function () {
+        $.ajax({
+            url: "/brighten", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+    $("#bt7").click(function () {
+        $.ajax({
+            url: "/pattern", success: function (result) {
+                console.log(result);
+            }
+        });
+    });
+ </script>
+
+<script>
+var Temp;
+Highcharts.setOptions(Highcharts.theme);
+
+Highcharts.setOptions({
+    global: {
+        useUTC: true
+    }
+});
+
+Temp = Highcharts.chart('container', {
+    chart: {
+        type: 'spline',
+        animation: Highcharts.svg, // don't animate in old IE
+        marginRight: 10,
+        events: {
+            load: function () {
+
+                // set up the updating of the chart each second
+                var series = this.series[0];
+                setInterval(                                
+                    function()
+                    {
+                    $.getJSON('/data', {}, function(data) {
+                        shift = series.data.length > 5;
+                        console.log(data.timestamp);
+                        var time = (new Date(data.timestamp)).getTime(); 
+                        series.addPoint([time, data.temperature], true, shift);                 
+                      });
+                      },
+                   8000); ;
+            }
+        }
+    },
+    title: {
+        text: 'Live Water Temperature'
+    },
+    xAxis: {
+        type: 'datetime',
+        tickPixelInterval: 150
+    },
+    yAxis: {
+        title: {
+            text: 'Temperature Fahrenheit'
+        },
+        plotLines: [{
+            value: 0,
+            width: 1,
+            color: '#808080'
+        }]
+    },
+    tooltip: {
+        formatter: function () {
+            return '<b>' + this.series.name + '</b><br/>' +
+                Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                Highcharts.numberFormat(this.y, 2);
+        }
+    },
+    legend: {
+        enabled: false
+    },
+    exporting: {
+        enabled: false
+    },
+    series: [{
+        name: 'Temp',
+        data: []
+    }]
+});
+
+</script>
+
+        
